@@ -77,22 +77,52 @@ namespace Lomont.SimpleShapes.Shape2D
                         SetStyle(sr, s);
                         doc.Children.Add(sr);
 #else
+
+                            var (rx, ry) = ((float)r.Rx, (float)r.Ry);
                             var sp = new SvgPath();
                             var sv = new SvgPathSegmentList();
                             var p1 = r.P1;
                             var p3 = r.P2;
                             var p2 = new Vec2(p1.X, p3.Y);
                             var p4 = new Vec2(p3.X, p1.Y);
+                            var dx = new Vec2(rx,0); // 
+                            var dy = new Vec2(0,ry); // 
                             p1 = t * p1;
                             p2 = t * p2;
                             p3 = t * p3;
                             p4 = t * p4;
+                            dx = t * dx - t*Vec2.Origin; // does rotation only, cancels translation
+                            dy = t * dy - t*Vec2.Origin;
 
-                            sv.Add(new SvgMoveToSegment(ToSvgPt(p1)));
-                            sv.Add(new SvgLineSegment(ToSvgPt(p1), ToSvgPt(p2)));
-                            sv.Add(new SvgLineSegment(ToSvgPt(p2), ToSvgPt(p3)));
-                            sv.Add(new SvgLineSegment(ToSvgPt(p3), ToSvgPt(p4)));
-                            sv.Add(new SvgClosePathSegment());
+                            var hasRad = dx.Length + dy.Length > 0.000001;
+
+                            SvgArcSegment Arc(Vec2 pt)
+                            {
+                                return new
+                                        SvgArcSegment(
+                                            radiusX: rx, radiusY: ry,
+                                            angle: 0,
+                                            SvgArcSize.Small,
+                                            SvgArcSweep.Negative,
+                                            isRelative: false,
+                                            end: ToSvgPt(pt)
+                                    );
+                            }
+
+
+                            sv.Add(new SvgMoveToSegment(false,ToSvgPt(p1+dx)));
+                            if (hasRad)
+                                sv.Add(Arc(p1 + dy));
+                            sv.Add(new SvgLineSegment(false,ToSvgPt(p2-dy)));
+                            if (hasRad)
+                                sv.Add(Arc(p2 + dx));
+                            sv.Add(new SvgLineSegment(false, ToSvgPt(p3-dx)));
+                            if (hasRad)
+                                sv.Add(Arc(p3 -dy));
+                            sv.Add(new SvgLineSegment(false, ToSvgPt(p4+dy)));
+                            if (hasRad)
+                                sv.Add(Arc(p4 - dx));
+                            sv.Add(new SvgClosePathSegment(true));
 
                             sp.PathData = sv;
 
