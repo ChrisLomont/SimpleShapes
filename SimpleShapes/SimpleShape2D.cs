@@ -279,7 +279,80 @@ namespace Lomont.SimpleShapes
             return outer.Bounds().Center(inner.Bounds());
         }
 
+        public static T Scale<T>(double scale, T item) where T : Node
+        {
+            return Scale<T>(scale,scale, item);
+        }
+        public static T Scale<T>(double scaleX, double scaleY, T item) where T : Node
+        {
+            var m = Mat3.Scale(scaleX, scaleY);
+            item.Transform = m * item.Transform;
+            return item;
+        }
+
         #endregion
+
+        // compute fillet circle p1->p2->p3, and two intersection points
+        public static (Vec2, Vec2, Node) FilletInfo(Vec2 p1, Vec2 p2, Vec2 p3, double radius)
+        {
+            var dir1 = (p1 - p2).Normalize();
+            var dir2 = (p3 - p2).Normalize();
+            var angle1 = Math.Atan2(dir1.Y, dir1.X);
+            var halfAngleBetween = Vec2.AngleBetween(dir2, dir1) / 2;
+
+            // dist along each edge
+            var edgeDist = radius / Math.Tan(halfAngleBetween);
+            // intersections
+            var int1 = p2 + dir1 * edgeDist;
+            var int2 = p2 + dir2 * edgeDist;
+
+
+            var mdPtDir = ((int1 + int2) / 2 - p2).Normalize();
+            // dist along center
+            var h = radius / Math.Sin(halfAngleBetween);
+
+            var center = p2 + h * mdPtDir;
+
+            var fc = Circle(center, radius);
+
+            return (int1, int2, fc);
+            //var p1 = pts[i];
+            // return Group(
+            //     fc,
+            //     Circle(int1,intRad),
+            //     Circle(int2, intRad)
+            //     );
+        }
+
+        // fillet the path
+        public static Node Fillet(Path p, double radius, IList<bool>? unflipped = null)
+        {
+            var points = new List<Vec2>();
+            var pts = p.GetPoints().ToList();
+            var len = pts.Count;
+            Node unionCircs = Group();
+            Node diffCircs = Group();
+            for (var i = 0; i <= len; ++i)
+            {
+                var p1 = pts[i % len];
+                var p2 = pts[(i + 1) % len];
+                var p3 = pts[(i + 2) % len];
+                var (i1, i2, c) = FilletInfo(p1, p2, p3, radius);
+                points.Add(i1);
+                points.Add(i2);
+                if (unflipped == null || unflipped.Count<=i)
+                    unionCircs = Union(unionCircs, c);
+                else
+                {
+                    if (unflipped[i])
+                        unionCircs = Union(unionCircs, c);
+                    else
+                        diffCircs = Union(diffCircs, c);
+                }
+            }
+
+            return Difference(Union(Path(points), unionCircs),diffCircs);
+        }
 
         #region Math
         public static double FromDegrees(double degrees) => Math.PI * degrees / 180.0;

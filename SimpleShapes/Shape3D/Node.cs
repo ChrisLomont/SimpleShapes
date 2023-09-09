@@ -458,16 +458,18 @@ namespace Lomont.SimpleShapes.Shape3D
 
     public class Cylinder : Node
     {
-        public Cylinder(double height, double radius1, double radius2)
+        public Cylinder(double height, double radius1, double radius2, int sides = 50)
         {
 
             Radius1 = radius1;
             Radius2 = radius2;
             Height = height;
+            Sides = sides;
         }
         public double Height { get; }
         public double Radius1 { get; }
         public double Radius2 { get; }
+        public int Sides { get; }
     }
 
     public class Sphere : Node

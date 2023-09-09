@@ -255,7 +255,7 @@ namespace Lomont.SimpleShapes.Shape3D
                 case Cylinder c:
                 {
                     DoColor(c.FillColor);
-                    w.WriteLine($"{ind}{ind}cylinder(h={c.Height},r1={c.Radius1},r2={c.Radius2},center=false,$fn=50);");
+                    w.WriteLine($"{ind}{ind}cylinder(h={c.Height},r1={c.Radius1},r2={c.Radius2},center=false,$fn={c.Sides});");
                 }
                     break;
                 case Path p:
@@ -340,7 +340,7 @@ namespace Lomont.SimpleShapes.Shape3D
                     };
                     w.WriteLine($"{ch}(){{");
                     foreach (var c in b.Nodes)
-                        WriteNode(indent+1,childTransform, w, c);
+                        WriteNode(indent+1,Mat4.Identity, w, c);
                     w.WriteLine("}");
                 }
                     break;

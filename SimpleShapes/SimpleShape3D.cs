@@ -205,18 +205,18 @@ namespace Lomont.SimpleShapes
         {
             return new Cylinder(height, radius, radius);
         }
-        public static Cylinder Cylinder(double height, double radius1, double radius2)
+        public static Cylinder Cylinder(double height, double radius1, double radius2, int sides = 50)
         {
-            return new Cylinder(height, radius1, radius2);
+            return new Cylinder(height, radius1, radius2, sides);
         }
 
-        public static Cylinder Cylinder(Vec3 p1, Vec3 p2, double radius)
+        public static Cylinder Cylinder(Vec3 p1, Vec3 p2, double radius, int sides = 50)
         {
             // default cylinder points in +z direction....
             var dir = p2 - p1;
             var rot = Mat4.CreateRotation(Vec3.ZAxis, dir);
             var ht = (p2 - p1).Length;
-            return Translate(p1, Transform(rot, new Cylinder(ht, radius, radius)));
+            return Translate(p1, Transform(rot, new Cylinder(ht, radius, radius, sides)));
         }
 
         public static Polygon Polygon(IEnumerable<Vec3> points)
