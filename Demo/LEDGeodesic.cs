@@ -15,6 +15,7 @@ using Lomont.SimpleShapes.Shape3D;
 using Sphere = Lomont.SimpleShapes.Shape3D.Sphere;
 using Lomont.Stats;
 using Lomont.Utility;
+using Color = Lomont.Graphics.Color;
 
 namespace Lomont.Projects
 {
@@ -34,11 +35,24 @@ namespace Lomont.Projects
             //SpherePoints("NPoints.scad"); // cover sphere with points in various methods
             //LEDBlock("BlockLEDs.scad"); // make a block of LEDs with different sizes
 
-            var top = LEDGeodesicBall(false); // make the LED geodesic ball shape
-            top.Save("LEDBallTop.scad");
-            var bot = LEDGeodesicBall(true); // make the LED geodesic ball shape
-            bot.Save("LEDBallBottom.scad");
-            Union(top,Translate(0,0,4.0,bot)).Save("LEDBallBoth.scad");
+            if (false)
+            {
+                var top = LEDGeodesicBall_v1(false); // make the LED geodesic ball shape
+                top.Save("LEDBallTop_v1.scad");
+                var bot = LEDGeodesicBall_v1(true); // make the LED geodesic ball shape
+                bot.Save("LEDBallBottom_v1.scad");
+                Union(top, Translate(0, 0, 4.0, bot)).Save("LEDBallBoth_v1.scad");
+            }
+
+            if (true)
+            {
+                var top = LEDGeodesicBall_v2(false); // make the LED geodesic ball shape
+                top.Save("LEDBallTop_v2.scad");
+                var bot = LEDGeodesicBall_v2(true); // make the LED geodesic ball shape
+                bot.Save("LEDBallBottom_v2.scad");
+                Union(top, Translate(0, 5, -5.0, bot)).Save("LEDBallBoth_v2.scad");
+            }
+
 
         }
 
@@ -69,7 +83,15 @@ namespace Lomont.Projects
         // return LED pointing up on +z axis
         // tip at 0,0,0
         // is an 8mm LED, WS2812B
-        Node LED(bool hasLeads = true, double kerf = 0, int sides = 40, bool hole = false)
+        Node LED(
+            bool hasLeads = true, 
+            double kerf = 0, 
+            int sides = 40, 
+            bool hole = false, 
+            double shellThickness = 1.7,
+            // prefent trapped air cups in PreForm
+            bool preventCups = false
+        )
         {
             double radius = 4.0+kerf; // mm
             double ht = 11.0+kerf; // total height
@@ -77,7 +99,6 @@ namespace Lomont.Projects
             double baseHt = 2.0+kerf; // height of base cylinder
             double wireLen = 16.0; // wire length
             double wireRadius = 0.5/2; // wire radius
-            double shellThickness = 2.0;
 
             var basePt = Point(0, 0, 0);
             var cylPt = Point(0,0,baseHt);
@@ -103,9 +124,24 @@ namespace Lomont.Projects
 
             var led = Translate(0, 0, -ht, ledShape);
             if (hole)
-            {
+            { // use LED to make hole
                 var shell = Cylinder(Point(0,0,shellThickness),Point(0,0,-ht+0.1),baseRadius+shellThickness).Color(Gray);
-                led = Difference(shell,led);
+                led = Difference(shell, led);
+
+                // cups
+                if (preventCups)
+                {
+                    double cupRadius = 1.0;
+                    double cupLength = 10.0;
+                    double cupZ = 0.0;
+                    led = Difference(led,
+                        Group(
+                            Cylinder(Point(-cupLength,0,cupZ),Point(cupLength,0,cupZ),cupRadius,12),
+                            Cylinder(Point(0,-cupLength,cupZ), Point(0,cupLength,cupZ), cupRadius, 12)
+                            ).Color(Red)
+                    );
+                }
+
                 led = Translate(0, 0, -shellThickness, led);
             }
 
@@ -135,9 +171,238 @@ namespace Lomont.Projects
 
             shape.Save(filename);
         }
+        // make ball piece
+        Node LEDGeodesicBall_v2(bool topPiece)
+        {
+            bool addEdges = false;
+            bool addShell = true;
+            bool addLeds = true;
+            bool clipVerts = true;
+            double wireHoleRadius = 4.0;
+            bool addNubs = false;
+
+            int numSides = 10; // sphere and cylinder divisions
+
+            var radius = 60.0;   // mm radius size of outer object
+            var cylRad = 2.0;  // tube radius
+            var sphRad = cylRad + 1.5; // cylinder radius
+            var shellThickness = 3.0;
+
+            var ledDepth = 4.0; // led depth from surface
+            var ledKerf = 0.1;
+            var ledSides = 50;
+
+            // geodesic vert, face definitions
+            var poly = Polyhedra.Icosahedron;
+            var (v, f) = GeodesicPolyhedron(poly, 2); // number of subdivisions
+            Console.WriteLine($"Vertices {v.Count / 3}, faces {f.Count / 4}");
+
+            // get nice vertex into Vec3
+            var pts = Enumerable.Range(0, v.Count / 3)
+                .Select(i => new Vec3(v[3 * i], v[3 * i + 1], v[3 * i + 2])).ToList();
+
+            // the geodesic should be symmetric, so the bounding sphere
+            // has diameter = max dist between verts
+            var maxPairDistance = 0.0;
+            for (int i = 0; i < pts.Count; ++i)
+                for (int j = i + 1; j < pts.Count; ++j)
+                {
+                    var dist = (pts[i] - pts[j]).Length;
+                    maxPairDistance = Max(dist, maxPairDistance);
+                }
+
+            // now scale points so enclosing diameter is the one requested
+            pts = pts.Select(p => p * radius / (maxPairDistance / 2)).ToList();
+
+            Node ball = Group();
+
+            // track edges added to prevent dups 
+            var seen = new HashSet<ulong>();
+
+            var faces = new List<Node>();
+            if (addEdges)
+            {
+                // create edges from tubes
+                var index = 0;
+                while (index < f.Count)
+                {
+                    var sides = f[index++];
+
+                    for (var i = 0; i < sides; ++i)
+                        AddTubeA(f[index + i], f[index + ((i + 1) % sides)]);
+                    index += sides;
+                }
+
+                // sphere at each vertex
+                var verts = new List<Node>();
+                foreach (var c in pts)
+                    verts.Add(Sphere(c, sphRad, numSides, numSides));
+                ball = Union(ball, Group(faces), Group(verts));
+            }
+
+            var clipZ = -8.0; // 8mm leds, this plenty?
+
+            // decide to clip or not
+            bool ClipTop(Vec3 p)
+            {
+                if (Abs(p.Z) < 5.0)
+                {
+                    // center slice, split on y
+                    return p.Y < 5.0;
+                }
+                return p.Z > clipZ;
+            }
+
+            List<Vec3> ClipPts(List<Vec3> pp)
+            {
+                return (!topPiece ? pp.Where(ClipTop) : pp.Where(p => !ClipTop(p))).ToList();
+            }
+
+            if (clipVerts)
+            {
+                // clip pts
+                pts = ClipPts(pts);
+            }
+
+            if (addLeds)
+            {
+                // leds at each vertex
+                var leds = Group(pts.Select(p =>
+                {
+                    var dz = radius - ledDepth;
+                    var mat = Align(Vec3.ZAxis, p);
+                    var led = LED(true, ledKerf, ledSides, true, preventCups:false);
+                    led = Translate(0, 0, dz, led);
+                    led = Transform(mat, led);
+                    return led;
+                }));
+                ball = Union(ball, leds);
+            }
+
+
+            if (addShell)
+            {
+                // shell
+                var shellSides = 100;
+                Node outer = Sphere(Vec3.Origin, radius, shellSides, shellSides).Color(topPiece ? Cyan : Blue);
+                Node inner = Sphere(Vec3.Origin, radius - shellThickness, shellSides, shellSides).Color(Red);
+                
+
+                // side holes
+                var sideHole = Cylinder(Point(-radius-5.0,0,0), Point(radius + 5.0, 0, 0), wireHoleRadius, 40);
+
+                // clip top/bottom shape
+                double zOffset = 12.0;
+                var bb = radius + 10;
+                var block1 = Cube(
+                    Point(-bb, -bb, -bb),
+                    Point( bb,  bb, -zOffset)
+                );
+                var block2 = Cube(
+                    Point(-bb, ledKerf, -2*zOffset),
+                    Point( bb, bb, zOffset)
+                );
+                var clip = Union(block1, block2, sideHole).Color(Green);
+                if (topPiece)
+                    clip = Rotate(PI, 0, 0, clip);
+
+                // textured surface
+                double nubRadius = 1.0;
+                if (addNubs)
+                {
+                    var (nubPoints, _) = FibonacciSpherePoints(4000);
+                    //nubPoints = ClipPts(nubPoints);
+                    var nubs = Group(nubPoints.Select(p => Sphere(p.Unit() * radius, nubRadius))).Color(Magenta);
+                    outer = Union(outer, nubs);
+                }
+
+                var shell = Difference(outer, Union(inner, clip));
+                ball = Union(ball, shell);
+
+                // small holes to prevent air cups
+                double cupHoleRadius = 0.5;
+                double cupExcess = 5.0; // length outside
+                var cupHoles = Group(pts.Select(
+                    p => Cylinder(p + p.Unit() * cupExcess, p - p.Unit() * (shellThickness + cupExcess), cupHoleRadius,
+                        12)
+                )).Color(White);
+                ball = Difference(ball, cupHoles);
+
+            }
+
+            
+            // create a matrix that orients startDir into endDir
+            Mat4 Align(Vec3 startDir, Vec3 endDir)
+            {
+
+                var m1 = XyzToFrame(startDir);
+                var m2 = XyzToFrame(endDir);
+                var inv = m1.Inverse();
+                var ans = m2 * inv;
+
+                CheckOrtho(ans * Vec3.XAxis, ans * Vec3.YAxis, ans * Vec3.ZAxis);
+
+                Trace.Assert(Abs((ans * Vec3.XAxis).Length - 1) < 1e-3);
+                Trace.Assert(Abs((ans * Vec3.YAxis).Length - 1) < 1e-3);
+                Trace.Assert(Abs((ans * Vec3.ZAxis).Length - 1) < 1e-3);
+
+                return ans;
+
+                // maps Z -> dir, creates right hand ortho X,Y,Z frame
+                static Mat4 XyzToFrame(Vec3 dir)
+                {
+                    // want x cross y = z, thus
+                    // z cross x = y, and
+                    // y cross z = x
+
+                    var startZ = dir.Unit();
+                    // need nonzero X, ortho to Z.
+                    var startX = Vec3.Cross(Vec3.YAxis, startZ);
+                    if (startX.Length < 1e-1) // not much in y direction, try x direction
+                        startX = Vec3.Cross(startZ, Vec3.XAxis);
+                    if (startX.Length < 1e-1) // not much in x or y direction, must be in z direction
+                        startX = Vec3.Cross(startZ, Vec3.ZAxis);
+                    startX = startX.Unit();
+
+                    var startY = Vec3.Cross(startZ, startX);
+                    startY = startY.Unit();
+
+                    CheckOrtho(startX, startY, startZ);
+
+                    // converts XYZ into start frame
+                    var m4 = new Mat4(startX, startY, startZ, new Vec3(0, 0, 0));
+                    m4[3, 3] = 1.0;
+                    return m4;
+                }
+
+            }
+            static void CheckOrtho(Vec3 startX, Vec3 startY, Vec3 startZ)
+            {
+                Trace.Assert(Abs((startX.Length - 1)) < 1e-3);
+                Trace.Assert(Abs((startY.Length - 1)) < 1e-3);
+                Trace.Assert(Abs((startZ.Length - 1)) < 1e-3);
+                Trace.Assert((Vec3.Cross(startX, startY) - startZ).Length < 1e-3);
+                Trace.Assert((Vec3.Cross(startZ, startX) - startY).Length < 1e-3);
+                Trace.Assert((Vec3.Cross(startY, startZ) - startX).Length < 1e-3);
+            }
+
+            return ball;
+
+            void AddTubeA(int i1, int i2)
+            {
+                var hash = (ulong)(Math.Min(i1, i2) * 1000 + Math.Max(i1, i2));
+                if (!seen.Contains(hash))
+                {
+                    var (p1, p2) = (pts[i1], pts[i2]);
+                    faces.Add(Cylinder(p1, p2, cylRad, numSides));
+                    seen.Add(hash);
+                }
+            }
+
+        }
 
         // make ball piece
-        Node LEDGeodesicBall(bool topPiece)
+        Node LEDGeodesicBall_v1(bool topPiece)
         {
             int numSides = 10; // sphere and cylinder divisions
 
