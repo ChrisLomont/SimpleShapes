@@ -90,7 +90,8 @@ namespace Lomont.Projects
             bool hole = false, 
             double shellThickness = 1.7,
             // prefent trapped air cups in PreForm
-            bool preventCups = false
+            bool preventCups = false,
+            double excess=0.0 // length on top
         )
         {
             double radius = 4.0+kerf; // mm
@@ -125,7 +126,7 @@ namespace Lomont.Projects
             var led = Translate(0, 0, -ht, ledShape);
             if (hole)
             { // use LED to make hole
-                var shell = Cylinder(Point(0,0,shellThickness),Point(0,0,-ht+0.1),baseRadius+shellThickness).Color(Gray);
+                var shell = Cylinder(Point(0,0,shellThickness+excess),Point(0,0,-ht+0.1),baseRadius+shellThickness).Color(Gray);
                 led = Difference(shell, led);
 
                 // cups
@@ -264,27 +265,42 @@ namespace Lomont.Projects
                 pts = ClipPts(pts);
             }
 
+            var shellSides = 100;
+
             if (addLeds)
             {
                 // leds at each vertex
-                var leds = Group(pts.Select(p =>
+                Node leds = Group(pts.Select(p =>
                 {
                     var dz = radius - ledDepth;
                     var mat = Align(Vec3.ZAxis, p);
-                    var led = LED(true, ledKerf, ledSides, true, preventCups:false);
+                    var led = LED(true, ledKerf, ledSides, true, preventCups:false, excess:3.6);
                     led = Translate(0, 0, dz, led);
                     led = Transform(mat, led);
                     return led;
                 }));
+
+                // clamp leds on outer ball
+                if (addShell)
+                {
+                    //Node outer = OuterShell().Color(new ColorB(255,0,0,64));
+                    //leds = Difference(leds,outer);
+                    //return leds;
+                }
+
                 ball = Union(ball, leds);
             }
 
+            Node OuterShell()
+            {
+                return Sphere(Vec3.Origin, radius, shellSides, shellSides).Color(topPiece ? Cyan : Blue);
+
+            }
 
             if (addShell)
             {
                 // shell
-                var shellSides = 100;
-                Node outer = Sphere(Vec3.Origin, radius, shellSides, shellSides).Color(topPiece ? Cyan : Blue);
+                Node outer = OuterShell();
                 Node inner = Sphere(Vec3.Origin, radius - shellThickness, shellSides, shellSides).Color(Red);
                 
 
@@ -322,10 +338,18 @@ namespace Lomont.Projects
                 // small holes to prevent air cups
                 double cupHoleRadius = 0.5;
                 double cupExcess = 5.0; // length outside
-                var cupHoles = Group(pts.Select(
+                Node cupHoles = Group(pts.Select(
                     p => Cylinder(p + p.Unit() * cupExcess, p - p.Unit() * (shellThickness + cupExcess), cupHoleRadius,
                         12)
                 )).Color(White);
+                
+                // one at tip to allow air exit
+                double scz = topPiece ? -1 : 1;
+                double zDepth = shellThickness+4.0;
+                double yDepth = 10.0;
+                cupHoles = Union(cupHoles,
+                    Cylinder(Point(0,0,scz*(radius-zDepth)),Point(0,scz*yDepth,scz*(radius-zDepth)),2*cupHoleRadius,12)
+                ).Color(White);
                 ball = Difference(ball, cupHoles);
 
             }
