@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Lomont.Graphics;
 using Lomont.Numerical;
+using Svg;
 using Boolean = Lomont.SimpleShapes.Shape3D.Boolean;
 using Path = Lomont.SimpleShapes.Shape3D.Path; //using System.Drawing;
 
@@ -256,6 +257,43 @@ namespace Lomont.SimpleShapes.Shape3D
                 {
                     DoColor(c.FillColor);
                     w.WriteLine($"{ind}{ind}cylinder(h={c.Height},r1={c.Radius1},r2={c.Radius2},center=false,$fn={c.Sides});");
+                }
+                    break;
+                case Polyhedron h:
+                {
+                    DoColor(h.FillColor);
+                    w.Write($"{ind}polyhedron( points = [");
+                    var pts = h.Points;
+                    for (var i = 0; i < pts.Count; i++)
+                    {
+                        var p = pts[i];
+                        w.Write($"[{p.X}, {p.Y}, {p.Z}]");
+                        if (i < pts.Count - 1)
+                            w.Write(",");
+                        w.Write(' ');
+                    }
+
+                    w.Write("], faces = [ ");
+                    for (var j = 0; j < h.Faces.Count; ++j)
+                    {
+                        var f = h.Faces[j];
+                        w.Write("[");
+                        for (var i = 0; i < f.Count; i++)
+                        {
+                            w.Write(f[i]);
+                            if (i < f.Count - 1)
+                                w.Write(",");
+                            w.Write(' ');
+                        }
+
+                        w.Write("]");
+                        if (j < h.Faces.Count - 1)
+                            w.Write(",");
+                        w.Write(' ');
+                    }
+
+                    w.WriteLine(" ], convexity = 10);");
+
                 }
                     break;
                 case Path p:

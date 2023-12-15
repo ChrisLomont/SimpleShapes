@@ -456,6 +456,24 @@ namespace Lomont.SimpleShapes.Shape3D
         public Vec3 Max { get; }
     }
 
+    public class Polyhedron : Node
+    {
+        public Polyhedron(List<Vec3> points, List<List<int>> faces)
+        {
+            Points.AddRange(points);
+            foreach (var f in faces)
+            {
+                var f2 = new List<int>();
+                f2.AddRange(f);
+                Faces.Add(f2);
+            }
+        }
+
+        public List<Vec3> Points { get; } = new();
+        public List<List<int>> Faces { get; } = new();
+
+    }
+
     public class Cylinder : Node
     {
         public Cylinder(double height, double radius1, double radius2, int sides = 50)

@@ -224,6 +224,12 @@ namespace Lomont.SimpleShapes
             return new Polygon(points);
         }
 
+        public static Polyhedron Polyhedron(List<Vec3> points, List<List<int>> faces)
+        {
+            return new Polyhedron(points, faces);
+
+        }
+
 
         // public Polygon NGon(double thickness, )
         // {

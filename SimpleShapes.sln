@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32408.312
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleShapes", "SimpleShapes\SimpleShapes.csproj", "{3878F9D9-B3C8-4A44-972F-981775757102}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleShapes", "SimpleShapes\SimpleShapes.csproj", "{3878F9D9-B3C8-4A44-972F-981775757102}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{E764F6EC-F507-414E-9BA5-98899B2CDA90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo", "Demo\Demo.csproj", "{E764F6EC-F507-414E-9BA5-98899B2CDA90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{E3FE376F-E2A2-4655-B1D9-0BFE9761F3AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{E3FE376F-E2A2-4655-B1D9-0BFE9761F3AE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{616CA7D2-2939-450D-9A5D-1B631148720F}"
 	ProjectSection(SolutionItems) = preProject
