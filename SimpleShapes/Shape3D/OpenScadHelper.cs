@@ -1,12 +1,8 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Diagnostics;
 using Lomont.Graphics;
 using Lomont.Numerical;
-using Svg;
-using Boolean = Lomont.SimpleShapes.Shape3D.Boolean;
-using Path = Lomont.SimpleShapes.Shape3D.Path; //using System.Drawing;
+
+//using System.Drawing;
 
 namespace Lomont.SimpleShapes.Shape3D
 {

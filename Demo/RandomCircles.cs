@@ -1,5 +1,4 @@
-﻿using System;
-using Lomont.Numerical;
+﻿using Lomont.Numerical;
 using Lomont.SimpleShapes;
 using Lomont.SimpleShapes.Shape2D;
 

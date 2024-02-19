@@ -1,6 +1,5 @@
 ﻿//using System.Numerics;
 
-using System;
 using System.Diagnostics;
 using Lomont.Numerical;
 using static System.Math;

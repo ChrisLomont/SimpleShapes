@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Lomont.Numerical;
+﻿using Lomont.Numerical;
 using static Lomont.SimpleShapes.SimpleShape2D;
 using static System.Math;
 

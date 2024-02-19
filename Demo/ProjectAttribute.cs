@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Lomont.Projects
+﻿namespace Lomont.Projects
 {
     /// <summary>
     /// Tag project classes with this to get auto recognized

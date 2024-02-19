@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Lomont.SimpleShapes
+﻿namespace Lomont.SimpleShapes
 {
     // sizes of common parts
     public static class Parts

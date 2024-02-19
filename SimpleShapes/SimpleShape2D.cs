@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Lomont.Graphics;
+﻿using Lomont.Graphics;
 using Lomont.Numerical;
 using Lomont.SimpleShapes.Shape2D;
 using Path = Lomont.SimpleShapes.Shape2D.Path;

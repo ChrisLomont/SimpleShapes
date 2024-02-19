@@ -1,11 +1,9 @@
 ﻿using Lomont.SimpleShapes;
-using System;
-using System.Runtime.InteropServices;
-using Lomont.Graphics;
 using Lomont.SimpleShapes.Shape2D;
 using static Lomont.SimpleShapes.SimpleShape2D;
-using System.Drawing;
 using Lomont.Numerical;
+using SimpleShapes;
+
 
 namespace Lomont.Projects
 {
@@ -13,18 +11,7 @@ namespace Lomont.Projects
 
     public class CNCPrecision
     {
-        // todo - move to some central place
-        static class ShaperOriginColors
-        {
-            public record Style(ColorB Fill, ColorB Stroke);
 
-            public static Style InteriorCut = new(White, Black);
-            public static Style ExteriorCut = new(Black, Black);
-            public static Style OnLineCut = new(White, Gray);
-            public static Style PocketingCut = new(Gray, Gray);
-            public static Style Guide = new(Blue, Blue);
-
-        }
 
         /// <summary>
         /// Make CNC Precision test piece
@@ -35,9 +22,9 @@ namespace Lomont.Projects
             // todo integrate single line engraving fonts from 
             // http://imajeenyus.com/computer/20150110_single_line_fonts/index.shtml
 
-            var inc = ShaperOriginColors.InteriorCut;
-            var ouc = ShaperOriginColors.ExteriorCut;
-            var tc = ShaperOriginColors.OnLineCut; // text cut
+            var inc = ShaperOrigin.InteriorCut;
+            var ouc = ShaperOrigin.ExteriorCut;
+            var tc = ShaperOrigin.OnLineCut; // text cut
             var fontName = "OrachTechDemo2Lttf"; // todo - engraving font
             var fontSize = 10.0;
             const double fontHeight = 25.4 / 6;
@@ -213,7 +200,7 @@ namespace Lomont.Projects
                 }
 
                 return Path(pts)
-                    .Stroke(ShaperOriginColors.OnLineCut.Stroke)
+                    .Stroke(ShaperOrigin.OnLineCut.Stroke)
                     .Stroke(0.3);
             }
 

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.IO;
+﻿using System.Drawing;
 using Lomont.Numerical;
 using Svg; // uses nuget package Svg 3.4.0 (or later?)
 using Svg.Pathing;

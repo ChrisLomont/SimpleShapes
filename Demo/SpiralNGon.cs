@@ -1,5 +1,4 @@
-﻿using System;
-using Lomont.SimpleShapes;
+﻿using Lomont.SimpleShapes;
 using Lomont.SimpleShapes.Shape2D;
 
 // todo - simplify includes....

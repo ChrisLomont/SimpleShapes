@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Lomont.Graphics;
+﻿using Lomont.Graphics;
 using Lomont.Numerical;
 using Lomont.SimpleShapes.Shape3D;
 using Boolean = Lomont.SimpleShapes.Shape3D.Boolean;

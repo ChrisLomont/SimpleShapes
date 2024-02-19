@@ -1,5 +1,4 @@
-﻿using System;
-using Lomont.Graphics;
+﻿using Lomont.Graphics;
 using Lomont.SimpleShapes;
 using static Lomont.SimpleShapes.SimpleShape3D;
 

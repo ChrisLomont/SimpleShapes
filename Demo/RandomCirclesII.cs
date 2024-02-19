@@ -1,16 +1,8 @@
-﻿using System;
-using System.Linq;
-using Lomont.Graphics;
-using Lomont.Numerical;
+﻿using Lomont.Numerical;
 using static Lomont.SimpleShapes.SimpleShape2D;
 using D = Lomont.SimpleShapes.DodecahedronInfo;
 using P = Lomont.SimpleShapes.PolyhedronInfo;
-using static System.Math;
-using System.Collections.Generic;
-using System.Data;
-using System.Runtime.InteropServices;
 using Lomont.SimpleShapes.Shape2D;
-using Path = Lomont.SimpleShapes.Shape2D.Path;
 
 namespace Lomont.Projects
 {
